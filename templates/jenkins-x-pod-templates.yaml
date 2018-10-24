@@ -32,17 +32,7 @@ data:
         hostPath:
           path: {{ $agent.DockerHostPath }}
 {{- end }}
-{{- range $index, $volume := $pval.volumes }}
-      - name: volume-{{ $index }}
-  {{- if eq "Secret" $volume.type }}
-        secret:
-          secretName: {{ $volume.secretName }}
-  {{- end }}
-  {{- if eq "HostPath" $volume.type }}
-        hostPath:
-          path: {{ $volume.hostPath }}
-  {{- end }}
-{{- end }}
+      {{ $pval.volumes | toYaml | indent 6 | trim }}
       containers:
   {{- range $ckey, $cval := $pval.Containers }}
   {{- if ne "Jnlp" $ckey }}
@@ -84,15 +74,14 @@ data:
             memory: {{ $cval.LimitMemory }}
   {{- end }}
         volumeMounts:
+          - name: workspace-volume
           - mountPath: /home/jenkins
-            name: workspace-volume
   {{- if $agent.DockerHostPath }}
           - name: docker-daemon
             mountPath: {{ $agent.DockerMountPath }}
   {{- end }}
-  {{- range $index, $volume := $pval.volumes }}
-          - name: volume-{{ $index }}
-            mountPath: {{ $volume.mountPath }}
+  {{- if $cval.volumeMounts }}
+          {{ $cval.volumeMounts | toYaml | indent 10 | trim }}
   {{- end }}
   {{- end }}
 {{- end }}
